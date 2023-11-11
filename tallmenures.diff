@@ -1,0 +1,60 @@
+diff --git a/src/m_menu.c b/src/m_menu.c
+index f2ae3842d2f1f5dc5eeec5700b76589ff02616d8..f5fade1702803ab87662bb2c85acc51228923eb1 100644
+--- a/src/m_menu.c
++++ b/src/m_menu.c
+@@ -5750,7 +5750,7 @@ static void M_DrawNightsAttackMountains(void)
+ 
+ 	if (vid.height != BASEVIDHEIGHT * dupz)
+ 		V_DrawFill(0, 0, BASEVIDWIDTH, BASEVIDHEIGHT, 158);
+-	V_DrawFill(0, y+50, vid.width, BASEVIDHEIGHT, V_SNAPTOLEFT|31);
++	V_DrawFill(0, y+50, vid.width, vid.height, V_SNAPTOLEFT|31);
+ 
+ 	V_DrawScaledPatch(x, y, V_SNAPTOLEFT, background);
+ 	x += w;
+@@ -9257,11 +9257,20 @@ static void M_DrawSetupChoosePlayerMenu(void)
+ 	}
+ 
+ 	y = (charseltimer%32);
++
++	V_DrawMappedPatch(0, y-(bgheight*3), V_SNAPTOTOP, charbg, colormap);
++	V_DrawMappedPatch(0, y-(bgheight*2), V_SNAPTOTOP, charbg, colormap);
+ 	V_DrawMappedPatch(0, y-bgheight, V_SNAPTOTOP, charbg, colormap);
+ 	V_DrawMappedPatch(0, y, V_SNAPTOTOP, charbg, colormap);
+ 	V_DrawMappedPatch(0, y+bgheight, V_SNAPTOTOP, charbg, colormap);
++	V_DrawMappedPatch(0, y+(bgheight*2), V_SNAPTOTOP, charbg, colormap);
++	V_DrawMappedPatch(0, y+(bgheight*3), V_SNAPTOTOP, charbg, colormap);
++
+ 	V_DrawMappedPatch(0, -y, V_SNAPTOTOP, charfg, colormap);
+ 	V_DrawMappedPatch(0, -y+fgheight, V_SNAPTOTOP, charfg, colormap);
++	V_DrawMappedPatch(0, -y+(fgheight*2), V_SNAPTOTOP, charfg, colormap);
++	V_DrawMappedPatch(0, -y+(fgheight*3), V_SNAPTOTOP, charfg, colormap);
++
+ 	V_DrawFill(fgwidth, 0, vid.width, vid.height, V_SNAPTOTOP|colormap[106]);
+ 
+ 	// Character pictures
+diff --git a/src/st_stuff.c b/src/st_stuff.c
+index 86e0b37542224bc780017c44449ef0fb3e55d306..4d06fcc1bdf15539e889700c4dafaef728595586 100644
+--- a/src/st_stuff.c
++++ b/src/st_stuff.c
+@@ -1372,11 +1372,17 @@ void ST_drawTitleCard(void)
+ 
+ 	if (!splitscreen || (splitscreen && stplyr == &players[displayplayer]))
+ 	{
++		INT16 zzheight = SHORT(zigzag->height);
++		INT16 ztheight = SHORT(zztext->height);
+ 		zzticker = lt_ticker;
+-		V_DrawMappedPatch(FixedInt(lt_zigzag), (-zzticker) % zigzag->height, V_SNAPTOTOP|V_SNAPTOLEFT, zigzag, colormap);
+-		V_DrawMappedPatch(FixedInt(lt_zigzag), (zigzag->height-zzticker) % zigzag->height, V_SNAPTOTOP|V_SNAPTOLEFT, zigzag, colormap);
+-		V_DrawMappedPatch(FixedInt(lt_zigzag), (-zigzag->height+zzticker) % zztext->height, V_SNAPTOTOP|V_SNAPTOLEFT, zztext, colormap);
+-		V_DrawMappedPatch(FixedInt(lt_zigzag), (zzticker) % zztext->height, V_SNAPTOTOP|V_SNAPTOLEFT, zztext, colormap);
++		V_DrawMappedPatch(FixedInt(lt_zigzag), (zzheight-zzticker) % zzheight, V_SNAPTOTOP|V_SNAPTOLEFT, zigzag, colormap);
++		V_DrawMappedPatch(FixedInt(lt_zigzag), (-zzticker) % zzheight, V_SNAPTOTOP|V_SNAPTOLEFT, zigzag, colormap);
++		V_DrawMappedPatch(FixedInt(lt_zigzag), ((-zzticker) % zzheight) + zzheight, V_SNAPTOTOP|V_SNAPTOLEFT, zigzag, colormap);
++		V_DrawMappedPatch(FixedInt(lt_zigzag), ((-zzticker) % zzheight) + zzheight*2, V_SNAPTOTOP|V_SNAPTOLEFT, zigzag, colormap);
++		V_DrawMappedPatch(FixedInt(lt_zigzag), (-ztheight+zzticker) % ztheight, V_SNAPTOTOP|V_SNAPTOLEFT, zztext, colormap);
++		V_DrawMappedPatch(FixedInt(lt_zigzag), (zzticker % ztheight), V_SNAPTOTOP|V_SNAPTOLEFT, zztext, colormap);
++		V_DrawMappedPatch(FixedInt(lt_zigzag), (zzticker % ztheight) + ztheight, V_SNAPTOTOP|V_SNAPTOLEFT, zztext, colormap);
++		V_DrawMappedPatch(FixedInt(lt_zigzag), (zzticker % ztheight) + (ztheight*2), V_SNAPTOTOP|V_SNAPTOLEFT, zztext, colormap);
+ 	}
+ 
+ 	if (actnum)

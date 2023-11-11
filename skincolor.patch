@@ -1,0 +1,143 @@
+diff --git a/src/d_netcmd.c b/src/d_netcmd.c
+index c97d3894c..12bd373dc 100644
+--- a/src/d_netcmd.c
++++ b/src/d_netcmd.c
+@@ -1,3 +1,4 @@
++
+ // SONIC ROBO BLAST 2
+ //-----------------------------------------------------------------------------
+ // Copyright (C) 1998-2000 by DooM Legacy Team.
+@@ -1242,17 +1243,9 @@ static void SendNameAndColor(void)
+ 
+ 	p = buf;
+ 
+-	// normal player colors
+-	if (G_GametypeHasTeams())
+-	{
+-		if (players[consoleplayer].ctfteam == 1 && cv_playercolor.value != skincolor_redteam)
+-			CV_StealthSetValue(&cv_playercolor, skincolor_redteam);
+-		else if (players[consoleplayer].ctfteam == 2 && cv_playercolor.value != skincolor_blueteam)
+-			CV_StealthSetValue(&cv_playercolor, skincolor_blueteam);
+-	}
+ 
+ 	// don't allow inaccessible colors
+-	if (!skincolors[cv_playercolor.value].accessible)
++	/*if (!skincolors[cv_playercolor.value].accessible)
+ 	{
+ 		if (players[consoleplayer].skincolor && skincolors[players[consoleplayer].skincolor].accessible)
+ 			CV_StealthSetValue(&cv_playercolor, players[consoleplayer].skincolor);
+@@ -1265,7 +1258,7 @@ static void SendNameAndColor(void)
+ 			while (i<numskincolors && !skincolors[i].accessible) i++;
+ 			CV_StealthSetValue(&cv_playercolor, (i != numskincolors) ? i : SKINCOLOR_BLUE);
+ 		}
+-	}
++	}*/
+ 
+ 	if (!strcmp(cv_playername.string, player_names[consoleplayer])
+ 	&& cv_playercolor.value == players[consoleplayer].skincolor
+@@ -1358,7 +1351,24 @@ static void SendNameAndColor(void)
+ 	// Finally write out the complete packet and send it off.
+ 	WRITESTRINGN(p, cv_playername.zstring, MAXPLAYERNAME);
+ 	WRITEUINT32(p, (UINT32)players[consoleplayer].availabilities);
+-	WRITEUINT16(p, (UINT16)cv_playercolor.value);
++
++	// normal player colors
++	if (G_GametypeHasTeams() && !players[consoleplayer].spectator && (players[consoleplayer].skincolor > 0)) //Lie to the server that we're using the right color by sending a packet of the right team
++														//while reassuring that we have the right color from setting it again (probably unneeded but i'm being safe)
++	{
++		if (players[consoleplayer].ctfteam == 1 && cv_playercolor.value != skincolor_redteam)
++		{
++			WRITEUINT16(p, (UINT16)skincolor_redteam);
++			players[consoleplayer].skincolor = cv_playercolor.value;
++		} else if (players[consoleplayer].ctfteam == 2 && cv_playercolor.value != skincolor_blueteam)	{
++			WRITEUINT16(p, (UINT16)skincolor_blueteam);
++			players[consoleplayer].skincolor = cv_playercolor.value;
++		}
++	} else {
++		WRITEUINT16(p, (UINT16)cv_playercolor.value);
++	}
++
++
+ 	WRITEUINT8(p, (UINT8)cv_skin.value);
+ 	SendNetXCmd(XD_NAMEANDCOLOR, buf, p - buf);
+ }
+@@ -1507,8 +1517,14 @@ static void Got_NameAndColor(UINT8 **cp, INT32 playernum)
+ 	// set color
+ 	p->skincolor = color % numskincolors;
+ 	if (p->mo)
+-		p->mo->color = (UINT16)p->skincolor;
+-
++	{
++ 		if (p == &players[consoleplayer])
++		{
++			p->mo->color = cv_playercolor.value % numskincolors;
++		} else {
++			p->mo->color = (UINT16)p->skincolor; //note
++		}
++	}
+ 	// normal player colors
+ 	if (server && (p != &players[consoleplayer] && p != &players[secondarydisplayplayer]))
+ 	{
+diff --git a/src/g_game.c b/src/g_game.c
+index 5fe2072b4..d698cb0be 100644
+--- a/src/g_game.c
++++ b/src/g_game.c
+@@ -2704,7 +2704,7 @@ void G_PlayerReborn(INT32 player, boolean betweenmaps)
+ 		//p->powers[pw_flashing] = flashingtics-1; // Babysitting deterrent
+ 
+ 	// Check to make sure their color didn't change somehow...
+-	if (G_GametypeHasTeams())
++	/*if (G_GametypeHasTeams())
+ 	{
+ 		if (p->ctfteam == 1 && p->skincolor != skincolor_redteam)
+ 		{
+@@ -2720,7 +2720,7 @@ void G_PlayerReborn(INT32 player, boolean betweenmaps)
+ 			else if (p == &players[secondarydisplayplayer])
+ 				CV_SetValue(&cv_playercolor2, skincolor_blueteam);
+ 		}
+-	}
++	}*/
+ 
+ 	if (betweenmaps)
+ 		return;
+diff --git a/src/p_mobj.c b/src/p_mobj.c
+index 58a4a685e..6e9f52f64 100644
+--- a/src/p_mobj.c
++++ b/src/p_mobj.c
+@@ -11431,9 +11431,9 @@ void P_SpawnPlayer(INT32 playernum)
+ 
+ 		// Fix team colors.
+ 		// This code isn't being done right somewhere else. Oh well.
+-		if (p->ctfteam == 1)
++		if ((p->ctfteam == 1) && (p != &players[consoleplayer]))
+ 			p->skincolor = skincolor_redteam;
+-		else if (p->ctfteam == 2)
++		else if ((p->ctfteam == 2) && (p != &players[consoleplayer]))
+ 			p->skincolor = skincolor_blueteam;
+ 	}
+ 
+diff --git a/src/p_tick.c b/src/p_tick.c
+index 20b709f0c..8e190f09d 100644
+--- a/src/p_tick.c
++++ b/src/p_tick.c
+@@ -775,6 +775,10 @@ void P_Ticker(boolean run)
+ 		R_UpdateViewInterpolation();
+ 	}
+ 
++	//MY EPIC WHOLESOME 100 CODE!!!!!! LOL XDDD		
++	if (playeringame[consoleplayer] && players[consoleplayer].mo && !P_MobjWasRemoved(players[consoleplayer].mo) && !players[consoleplayer].spectator)
++		players[consoleplayer].mo->color = cv_playercolor.value % numskincolors;
++
+ 	P_MapEnd();
+ 
+ //	Z_CheckMemCleanup();
+@@ -822,7 +826,9 @@ void P_PreTicker(INT32 frames)
+ 		// Run any "after all the other thinkers" stuff
+ 		for (i = 0; i < MAXPLAYERS; i++)
+ 			if (playeringame[i] && players[i].mo && !P_MobjWasRemoved(players[i].mo))
++			{
+ 				P_PlayerAfterThink(&players[i]);
++			}
+ 
+ 		LUA_HookThinkFrame();
+ 
