@@ -9921,10 +9921,10 @@ boolean P_MoveChaseCamera(player_t *player, camera_t *thiscam, boolean resetcall
 
 	cameranoclip = (sign || player->powers[pw_carry] == CR_NIGHTSMODE || player->pflags & PF_NOCLIP) || (mo->flags & (MF_NOCLIP|MF_NOCLIPHEIGHT)); // Noclipping player camera noclips too!!
 
-	if (!(player->climbing || (player->powers[pw_carry] == CR_NIGHTSMODE) || tutorialmode)) // || player->playerstate == PST_DEAD 
+	if (!(player->climbing || (player->powers[pw_carry] == CR_NIGHTSMODE) || player->playerstate == PST_DEAD || tutorialmode))
 	{
 		if (player->spectator) // force cam off for spectators
-		return true;
+			return true;
 
 		if (!cv_chasecam.value && thiscam == &camera)
 			return true;
@@ -10025,7 +10025,7 @@ boolean P_MoveChaseCamera(player_t *player, camera_t *thiscam, boolean resetcall
 
 	if (twodlevel || (mo->flags2 & MF2_TWOD))
 		angle = ANGLE_90;
-	else if (camstill || resetcalled)// || player->playerstate == PST_DEAD)
+	else if (camstill || resetcalled || player->playerstate == PST_DEAD)
 		angle = thiscam->angle;
 	else if (player->powers[pw_carry] == CR_NIGHTSMODE) // NiGHTS Level
 	{
@@ -10131,9 +10131,8 @@ boolean P_MoveChaseCamera(player_t *player, camera_t *thiscam, boolean resetcall
 			camheight = FixedMul(camheight, 6*FRACUNIT/5);
 		}
 
-		// NUH UH
-		//if (player->climbing || player->exiting || player->playerstate == PST_DEAD || (player->powers[pw_carry] == CR_ROPEHANG || player->powers[pw_carry] == CR_GENERIC || player->powers[pw_carry] == CR_MACESPIN))
-		//	dist <<= 1;
+		if (player->climbing || player->exiting || player->playerstate == PST_DEAD || (player->powers[pw_carry] == CR_ROPEHANG || player->powers[pw_carry] == CR_GENERIC || player->powers[pw_carry] == CR_MACESPIN))
+			dist <<= 1;
 	}
 
 	if (!sign && !(twodlevel || (mo->flags2 & MF2_TWOD)) && !(player->powers[pw_carry] == CR_NIGHTSMODE))
@@ -10484,14 +10483,14 @@ boolean P_MoveChaseCamera(player_t *player, camera_t *thiscam, boolean resetcall
 		thiscam->momx = FixedMul(x - thiscam->x, camspeed);
 		thiscam->momy = FixedMul(y - thiscam->y, camspeed);
 
-		//if (thiscam->subsector->sector->damagetype == SD_DEATHPITTILT
-		//	&& thiscam->z < thiscam->subsector->sector->floorheight + 256*FRACUNIT
-		//	&& FixedMul(z - thiscam->z, camspeed) < 0)
-		//{
-		//	thiscam->momz = 0; // Don't go down a death pit
-		//}
-		//else
-		//	thiscam->momz = FixedMul(z - thiscam->z, camspeed);
+		if (thiscam->subsector->sector->damagetype == SD_DEATHPITTILT
+			&& thiscam->z < thiscam->subsector->sector->floorheight + 256*FRACUNIT
+			&& FixedMul(z - thiscam->z, camspeed) < 0)
+		{
+			thiscam->momz = 0; // Don't go down a death pit
+		}
+		else
+			thiscam->momz = FixedMul(z - thiscam->z, camspeed);
 
 		thiscam->momx += FixedMul(shiftx, camspeed);
 		thiscam->momy += FixedMul(shifty, camspeed);
@@ -10549,7 +10548,7 @@ boolean P_MoveChaseCamera(player_t *player, camera_t *thiscam, boolean resetcall
 		else if (!(mo->eflags & MFE_VERTICALFLIP) && thiscam->aiming > ANGLE_45 && thiscam->aiming < ANGLE_180)
 			thiscam->aiming = ANGLE_45;
 	}
-	else if (!resetcalled && (player->playerstate == PST_DEAD || player->playerstate == PST_REBORN))
+	else */if (!resetcalled && (player->playerstate == PST_DEAD || player->playerstate == PST_REBORN))
 	{
 		// Don't let the camera match your movement.
 		thiscam->momz = 0;
@@ -10559,7 +10558,7 @@ boolean P_MoveChaseCamera(player_t *player, camera_t *thiscam, boolean resetcall
 			thiscam->aiming = ANGLE_337h;
 		else if (mo->eflags & MFE_VERTICALFLIP && thiscam->aiming > ANGLE_22h && thiscam->aiming < ANGLE_180)
 			thiscam->aiming = ANGLE_22h;
-	}*/
+	}
 
 	return (x == thiscam->x && y == thiscam->y && z == thiscam->z && angle == thiscam->aiming);
 
