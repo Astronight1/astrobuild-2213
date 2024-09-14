@@ -623,11 +623,6 @@ static void Impl_HandleWindowEvent(SDL_WindowEvent evt)
 			kbfocus = SDL_FALSE;
 			mousefocus = SDL_FALSE;
 			break;
-		case SDL_WINDOWEVENT_RESIZED:
-			setresneeded[0] = evt.data1;
-			setresneeded[1] = evt.data2;
-			setresneeded[2] = 1;
-			break;
 		case SDL_WINDOWEVENT_MAXIMIZED:
 			break;
 	}
@@ -1677,34 +1672,6 @@ INT32 VID_SetMode(INT32 modeNum)
 	return SDL_TRUE;
 }
 
-// VID_SetMode but no video modes
-INT32 VID_SetResolution(INT32 width, INT32 height)
-{
-	SDLdoUngrabMouse();
-
-	vid.recalc = 1;
-	vid.bpp = 1;
-
-	vid.width = (width < BASEVIDWIDTH) ? BASEVIDWIDTH : ((width > MAXVIDWIDTH) ? MAXVIDWIDTH : width);
-	vid.height = (height < BASEVIDHEIGHT) ? BASEVIDHEIGHT : ((height > MAXVIDHEIGHT) ? MAXVIDHEIGHT : height);
-	vid.modenum = VID_GetModeForSize(width, height);
-
-	SDLSetMode(vid.width, vid.height, USE_FULLSCREEN, (setresneeded[2] == 2));
-
-	if (rendermode == render_soft)
-	{
-		if (bufSurface)
-		{
-			SDL_FreeSurface(bufSurface);
-			bufSurface = NULL;
-		}
-
-		Impl_VideoSetupBuffer();
-	}
-
-	return SDL_TRUE;
-}
-
 static SDL_bool Impl_CreateWindow(SDL_bool fullscreen)
 {
 	int flags = 0;
@@ -1730,8 +1697,6 @@ static SDL_bool Impl_CreateWindow(SDL_bool fullscreen)
 	// default value for SDL_GL_DEPTH_SIZE is 16.
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 #endif
-
-	flags |= SDL_WINDOW_RESIZABLE;
 
 	// Create a window
 	window = SDL_CreateWindow("SRB2 "VERSIONSTRING, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,

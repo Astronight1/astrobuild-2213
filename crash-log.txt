@@ -1,0 +1,24 @@
+------------------------
+
+An error occurred within SRB2! Send this stack trace to someone who can help!
+Time of crash: Sun, 19 May 2024 15:08:01 -0400
+Cause: Segmentation fault
+
+Backtrace:
+sugoastrobuild(+0x84410)[0x63ae213dc410]
+sugoastrobuild(+0x84538)[0x63ae213dc538]
+/usr/lib/libc.so.6(+0x3cae0)[0x725b62064ae0]
+sugoastrobuild(G_SaveGameData+0x0)[0x63ae21462470]
+sugoastrobuild(I_Quit+0x3f)[0x63ae213de8ff]
+sugoastrobuild(+0x869c6)[0x63ae213de9c6]
+/usr/lib/libc.so.6(+0x3cae0)[0x725b62064ae0]
+/usr/lib/libc.so.6(fstatat+0xe)[0x725b6212c72e]
+sugoastrobuild(filesearch+0x16c)[0x63ae215c956c]
+sugoastrobuild(+0x83d28)[0x63ae213dbd28]
+sugoastrobuild(I_LocateWad+0x133)[0x63ae213df5c3]
+sugoastrobuild(D_SRB2Main+0xe1)[0x63ae21413ed1]
+sugoastrobuild(main+0x54)[0x63ae213db8d4]
+/usr/lib/libc.so.6(+0x25c88)[0x725b6204dc88]
+/usr/lib/libc.so.6(__libc_start_main+0x8c)[0x725b6204dd4c]
+sugoastrobuild(_start+0x25)[0x63ae213dbb05]
+
